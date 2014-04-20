@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" ng-app="testApp">
+<head>
+  <meta charset="utf-8">
+  <title>Sortable test APP</title>
+  <link rel="stylesheet" href="css/bootstrap.css">
+  <link rel="stylesheet" href="css/bootstrap.overrides.css">
+  <script src="js/angular.js"></script>
+  <script src="js/controllers.js"></script>
+</head>
+<body ng-controller="DndItemsListCtrl">
+<div class='container'>
+  <h1>Sortable Test App</h1>  
+   
+   <div class="row">
+   <div class="col-md-6">
+  <ul >
+    <li ng-repeat="item in items" isdraggable index="{{$index}}" id='item{{$index}}' class='items'>     
+      {{item.text}}
+    </li>
+  </ul>
+  </div>
+  <div class="col-md-6"><pre ng-bind="items|json"></pre></div>  
+</div>
+  
+ 
+  
+</div>
+</body>
+</html>

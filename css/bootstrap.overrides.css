@@ -1,0 +1,22 @@
+*[draggable=true] {
+  -moz-user-select:none;
+  -khtml-user-drag: element;
+  cursor: move;
+}
+
+ul{
+	padding-left:0;
+}
+ul li{
+	list-style-type: none;
+	margin-bottom:10px;
+	padding:10px;
+	border:1px solid gray;
+}
+ul li:first-child,ul li:last-child{
+	border: 0px solid gray;
+}
+ul li.dragEl{
+	display:none;
+	
+}
