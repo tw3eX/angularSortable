@@ -6,22 +6,28 @@ var sortableApp = angular.module('testApp', []);
 sortableApp.directive('isdraggable', function () {
     return function (scope, element, attrs) {
         var el = element[0];
-        el.draggable = true;
+        el.draggable = true;        
+
         el.addEventListener(
             'dragstart',
             function (e) {
-                if (this.getAttribute('index') == 0 || this.getAttribute('index') == scope.items.length - 1) {
+                if (attrs.index == 0 || attrs.index == scope.items.length - 1) {
                     e.preventDefault();
                     return false;
-                }             
-
+                }            
+                
+                scope.$apply(function(){                   
+                    scope.renderEffects(element.parent());
+                });
+   
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.dropEffect = 'move'
-                e.dataTransfer.setData('dragIndex', this.getAttribute('index'));
-                e.dataTransfer.setData('dragHtml', document.getElementById('item' + this.getAttribute('index')).innerHTML);
+                
+                e.dataTransfer.setData('dragIndex', attrs.index);
+                e.dataTransfer.setData('dragHtml', attrs.$$element[0].innerHTML);
 
-                scope.items[this.getAttribute('index')].type = 'dragEl';
-                scope.$apply('pushWay(' + this.getAttribute('index') + ')');
+                scope.items[attrs.index].type = 'dragEl';
+                scope.$apply('pushWay(' + attrs.index + ')');
                 return false;
             },
             false
@@ -29,7 +35,8 @@ sortableApp.directive('isdraggable', function () {
         el.addEventListener(
             'dragenter',
             function (e) {
-                if (scope.items[this.getAttribute('index')].type || scope.items[this.getAttribute('index')].type == 'placeholderEl') {
+
+                if (scope.items[attrs.index].type || scope.items[attrs.index].type == 'placeholderEl') {
                     e.preventDefault();
                     return false;
                 }
@@ -37,7 +44,7 @@ sortableApp.directive('isdraggable', function () {
 
                 var wayNew = parseInt(scope.way[0]);
                 var wayOld = parseInt(scope.way[1]);
-                var curHover = parseInt(this.getAttribute('index'));
+                var curHover = parseInt(attrs.index);
                 var curPlaceholder = parseInt(scope.placeholder);
                 var lastElement = scope.items.length - 1;
                 var dragEl = e.dataTransfer.getData('dragIndex');
@@ -71,13 +78,15 @@ sortableApp.directive('isdraggable', function () {
                     ghostPos--;
                 }
 
-                if (this.getAttribute('index') != scope.placeholder) scope.$apply('removePlaceholder()');
+                if (attrs.index != scope.placeholder) scope.$apply('removePlaceholder()');
                 if (Math.abs(dragEl - curHover) > 1) {
                     scope.$apply('insertPlaceholder(' + ghostPos + ', 0, {"text":"' + dragHtml + '","type":"placeholderEl"})');
                 }
                 //TODO: fix problem with display:block and dragenter, when curHover != lastElement && dragEl != lastElement + 1
                 if (curHover != lastElement && dragEl != lastElement + 1) {
-                    scope.$apply('renderEffects()');
+                    scope.$apply(function(){                   
+                    scope.renderEffects(element.parent());
+                });
                 }
                 return false;
             },
@@ -87,7 +96,9 @@ sortableApp.directive('isdraggable', function () {
             'dragleave',
             function (e) {
                 e.dataTransfer.dropEffect = 'move';          
-                scope.$apply('renderEffects()');             
+                scope.$apply(function(){                   
+                    scope.renderEffects(element.parent());
+                });            
                 return false;
             },
             false
@@ -99,6 +110,9 @@ sortableApp.directive('isdraggable', function () {
                 scope.way[0] = -1;
                 scope.way[1] = -1;
                 scope.$apply('dragEnd()');
+                scope.$apply(function(){                   
+                    scope.renderEffects(element.parent());
+                }); 
             },
             false
         );
@@ -116,7 +130,7 @@ sortableApp.controller('DndItemsListCtrl', function ($scope) {
     }, {
         'text': '4'
     }];
-
+    $scope.rootUl;
     $scope.way = [-1, -1];
     $scope.placeholder = -1;
 
@@ -151,7 +165,7 @@ sortableApp.controller('DndItemsListCtrl', function ($scope) {
     }
 
     $scope.dragEnd = function (index) {
-        console.log('EndDrag');
+     
         for (var i = 0; i < $scope.items.length; i++) {
             if (!$scope.items[i].type) continue;
             if ($scope.items[i].type == 'placeholderEl') {
@@ -166,27 +180,29 @@ sortableApp.controller('DndItemsListCtrl', function ($scope) {
             $scope.items[dragEl] = $scope.items.splice(placeholderEl, 1, $scope.items[dragEl])[0];
             $scope.items.splice(dragEl, 1);
         }
-        $scope.renderEffects()
+       
     }
 
     //TODO: add some effects for over,drag && others
-    $scope.renderEffects = function () {
-        var list = document.getElementsByClassName("items");
+    $scope.renderEffects = function (rootUl) {           
+        var list = rootUl[0].children;
         for (var i = 0; i < list.length; i++) {
             list[i].classList.remove('dragEl');
             list[i].classList.remove('placeholderEl');
         }      
         for (var i = 0; i < $scope.items.length; i++) {
+            //console.log(rootUl[0].children)
             if (!$scope.items[i].type) continue;
             if ($scope.items[i].type == 'placeholderEl') {
-                document.getElementById('item' + i).classList.add('placeholderEl');
+
+                rootUl[0].children[i].classList.add('placeholderEl');
             } else {
-                document.getElementById('item' + i).classList.remove('placeholderEl');
+                rootUl[0].children[i].classList.remove('placeholderEl');
             }
             if ($scope.items[i].type == 'dragEl' && $scope.placeholder != -1) {
-                document.getElementById('item' + i).classList.add('dragEl');
+                rootUl[0].children[i].classList.add('dragEl');
             } else if ($scope.items[i].type == 'dragEl' && $scope.placeholder == -1) {
-                document.getElementById('item' + i).classList.remove('dragEl');
+                rootUl[0].children[i].classList.remove('dragEl');
             }
         }
     }
